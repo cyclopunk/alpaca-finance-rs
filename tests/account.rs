@@ -2,7 +2,6 @@ use alpaca_finance::{ Account, AccountStatus };
 use mockito::Mock;
 use std::fs::File;
 use std::io::prelude::*;
-use tokio_test::block_on;
 
 mod common;
 
@@ -18,16 +17,16 @@ async fn base_mock(test_name: &str) -> std::io::Result<Mock> {
       .with_status(200))
 }
 
-#[test]
-fn get_account() {
+#[tokio::test]
+async fn get_account() {
    //! Ensure that we can load a valid account
 
    // GIVEN - a valid account on Alpaca
-   let alpaca = block_on(common::build_alpaca());
-   let _m = block_on(base_mock("valid")).unwrap().create();
+   let alpaca =common::build_alpaca().await;
+   let _m = base_mock("valid").await.unwrap().create();
 
    // WHEN - we get our account
-   let account = block_on(Account::get(&alpaca)).unwrap();
+   let account = Account::get(&alpaca).await.unwrap();
 
    // THEN - we get the results we expect
    assert_eq!("e6fe16f3-64a4-4921-8928-cadf02f92f98", account.id);
