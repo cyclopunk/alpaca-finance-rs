@@ -2,7 +2,6 @@ use alpaca_finance::{ Order };
 use mockito::Mock;
 use std::fs::File;
 use std::io::prelude::*;
-use tokio_test::block_on;
 
 mod common;
 
@@ -17,16 +16,15 @@ async fn base_mock(test_name: &str, mock: Mock) -> std::io::Result<Mock> {
       .with_status(200))
 }
 
-#[test]
-fn get_open() {
-   //! Ensure that we can load valid open orders
+#[tokio::test]
+async fn get_open() {
 
    // GIVEN - a valid open order in place
-   let alpaca = block_on(common::build_alpaca());
-   let _m = block_on(base_mock("valid_open", common::build_mock("GET", "/v2/orders?status=open"))).unwrap().create();
+   let alpaca = common::build_alpaca().await;
+   let _m = base_mock("valid_open", common::build_mock("GET", "/v2/orders?status=open")).await.unwrap().create();
 
    // WHEN - we get our open orders
-   let orders = block_on(Order::get_open(&alpaca)).unwrap();
+   let orders = Order::get_open(&alpaca).await.unwrap();
 
    // THEN - we get the results we expect
    assert_eq!(1, orders.len());

@@ -25,9 +25,9 @@ fn validate_order(order: Order) {
    assert_eq!("AAPL", order.symbol);
 }
 
-#[test]
-fn event_fill() {
-   //! Ensure that we can parse fill events successfully
+#[tokio::test]
+async fn event_fill() {
+   // Ensure that we can parse fill events successfully
 
    // GIVEN - valid data for the 'fill' event
    let data = build_event("fill");

@@ -17,60 +17,64 @@ async fn base_mock(test_name: &str) -> std::io::Result<Mock> {
       .with_status(200))
 }
 
-#[tokio::test]
-async fn get_account() {
-   //! Ensure that we can load a valid account
+#[cfg(test)]
+mod test {
+   use super::*;
+   #[tokio::test(flavor = "multi_thread")]
+   async fn get_account() {
+      // Ensure that we can load a valid account
 
-   // GIVEN - a valid account on Alpaca
-   let alpaca =common::build_alpaca().await;
-   let _m = base_mock("valid").await.unwrap().create();
+      // GIVEN - a valid account on Alpaca
+      let alpaca =common::build_alpaca().await;
+      let _m = base_mock("valid").await.unwrap().create();
 
-   // WHEN - we get our account
-   let account = Account::get(&alpaca).await.unwrap();
+      // WHEN - we get our account
+      let account = Account::get(&alpaca).await.unwrap();
 
-   // THEN - we get the results we expect
-   assert_eq!("e6fe16f3-64a4-4921-8928-cadf02f92f98", account.id);
-   assert_eq!("010203ABCD", account.number);
-   assert_eq!(-23140.2, account.cash);
-   assert_eq!(103820.56, account.equity);
-   assert_eq!(126960.76, account.long_market_value);
-   assert_eq!(0.0, account.short_market_value);
-   assert_eq!(262113.632, account.buying_power);
-   assert_eq!(AccountStatus::Active, account.status);
-   assert_eq!(false, account.is_account_blocked);
-   assert_eq!(false, account.is_trade_suspended);
-   assert_eq!(false, account.is_trading_blocked);
-   assert_eq!(false, account.is_transfers_blocked);
-}
+      // THEN - we get the results we expect
+      assert_eq!("e6fe16f3-64a4-4921-8928-cadf02f92f98", account.id);
+      assert_eq!("010203ABCD", account.number);
+      assert_eq!(-23140.2, account.cash);
+      assert_eq!(103820.56, account.equity);
+      assert_eq!(126960.76, account.long_market_value);
+      assert_eq!(0.0, account.short_market_value);
+      assert_eq!(262113.632, account.buying_power);
+      assert_eq!(AccountStatus::Active, account.status);
+      assert_eq!(false, account.is_account_blocked);
+      assert_eq!(false, account.is_trade_suspended);
+      assert_eq!(false, account.is_trading_blocked);
+      assert_eq!(false, account.is_transfers_blocked);
+   }
 
-#[test]
-#[should_panic(expected = "InvalidCredentials")]
-fn get_account_bad_credentials() {
-   //! Ensure that we fail gracefully when we have bad credentials
+   #[tokio::test]
+   #[should_panic(expected = "InvalidCredentials")]
+   async fn get_account_bad_credentials() {
+      // Ensure that we fail gracefully when we have bad credentials
 
-   // GIVEN - invalid credentials for an account
-   let alpaca = block_on(common::build_alpaca());
-   let _m = block_on(base_mock("valid")).unwrap()
-      .with_status(403)
-      .create();
+      // GIVEN - invalid credentials for an account
+      let alpaca = common::build_alpaca().await;
+      let _m = base_mock("valid").await.unwrap()
+         .with_status(403)
+         .create();
 
-   // WHEN - we get our account
-   block_on(Account::get(&alpaca)).unwrap();
+      // WHEN - we get our account
+      Account::get(&alpaca).await.unwrap();
 
-   // THEN - we get an error
-}
+      // THEN - we get an error
+   }
 
-#[test]
-#[should_panic(expected = "BadData")]
-fn get_account_bad_data() {
-   //! Ensure that we fail gracefully when Alpaca sends us bad data
+   #[tokio::test]
+   #[should_panic(expected = "BadData")]
+   async fn get_account_bad_data() {
+      // Ensure that we fail gracefully when Alpaca sends us bad data
 
-   // GIVEN - an account with corrupted data
-   let alpaca = block_on(common::build_alpaca());
-   let _m = block_on(base_mock("corrupted")).unwrap().create();
+      // GIVEN - an account with corrupted data
+      let alpaca = common::build_alpaca().await;
+      let _m = base_mock("corrupted").await.unwrap().create();
 
-   // WHEN - we get our account
-   block_on(Account::get(&alpaca)).unwrap();
+      // WHEN - we get our account
+      Account::get(&alpaca).await.unwrap();
 
-   // THEN - we get an error
+      // THEN - we get an error
+   }
 }
